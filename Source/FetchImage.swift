@@ -97,14 +97,14 @@ public final class FetchImage: ObservableObject, Identifiable {
         error = nil
 
         // Try to display the regular image if it is available in memory cache
-        if let response = pipeline.cachedResponse(for: request) {
-            (image, loadedImageQuality) = (response.image, .regular)
+        if let container = pipeline.cachedImage(for: request) {
+            (image, loadedImageQuality) = (container.image, .regular)
             return // Nothing to do
         }
 
         // Try to display the low data image and retry loading the regular image
-        if let response = lowDataRequest.flatMap(pipeline.cachedResponse(for:)) {
-            (image, loadedImageQuality) = (response.image, .low)
+        if let container = lowDataRequest.flatMap(pipeline.cachedImage(for:)) {
+            (image, loadedImageQuality) = (container.image, .low)
         }
 
         isLoading = true
