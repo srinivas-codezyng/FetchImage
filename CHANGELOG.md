@@ -1,5 +1,12 @@
 # FetchImage 0.x
 
+## FetchImage 0.3.0
+
+*Dec 26, 2020*
+
+- **Breaking Change** `FetchImage` no longer starts the request in the initializer, you must call `fetch()`.
+- Add `reset()` method which clears the entire `FetchImage` state including the downloaded image. This is crucial for long lists where you don't want `FetchImage` instances to retains images which are off screen.
+
 ## FetchImage 0.2.1
 
 *May 23, 2020*
