@@ -97,12 +97,13 @@ public struct ImageView: View {
                 .aspectRatio(contentMode: .fill)
         }
 
-        // (Optional) Animate image appearance
-        .animation(.default)
-
-        // (Optional) Cancel and restart requests during scrolling
+        // Cancel and restart the request during scrolling
+        // If the view is still on screen, use `cancel()` instead of `reset()`.
         .onAppear(perform: image.fetch)
         .onDisappear(perform: image.reset)
+
+        // (Optional) Animate image appearance
+        .animation(.default)
     }
 }
 

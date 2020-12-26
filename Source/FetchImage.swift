@@ -62,8 +62,6 @@ public final class FetchImage: ObservableObject, Identifiable {
         self.lowDataRequest = lowDataRequest
         self.priority = request.priority
         self.pipeline = pipeline
-
-        self.fetch()
     }
 
     /// Initializes the fetch request and immediately start loading.
@@ -158,7 +156,8 @@ public final class FetchImage: ObservableObject, Identifiable {
         }
     }
 
-    /// Marks the request as being cancelled.
+    /// Marks the request as being cancelled. Continues to display a downloaded
+    /// image.
     public func cancel() {
         task?.cancel() // Guarantees that no more callbacks are will be delivered
         task = nil
@@ -171,7 +170,6 @@ public final class FetchImage: ObservableObject, Identifiable {
         cancel()
         image = nil
         error = nil
-        isLoading = false
         progress = Progress(completed: 0, total: 0)
         loadedImageQuality = nil
     }
