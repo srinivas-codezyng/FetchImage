@@ -102,7 +102,7 @@ public struct ImageView: View {
 
         // (Optional) Cancel and restart requests during scrolling
         .onAppear(perform: image.fetch)
-        .onDisappear(perform: image.cancel)
+        .onDisappear(perform: image.reset)
     }
 }
 

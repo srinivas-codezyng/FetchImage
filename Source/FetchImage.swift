@@ -46,7 +46,7 @@ public final class FetchImage: ObservableObject, Identifiable {
 
     private let pipeline: ImagePipeline
     private var task: ImageTask?
-    private var loadedImageQuality: ImageQuality? = nil
+    private var loadedImageQuality: ImageQuality?
 
     private enum ImageQuality {
         case regular, low
@@ -163,6 +163,17 @@ public final class FetchImage: ObservableObject, Identifiable {
         task?.cancel() // Guarantees that no more callbacks are will be delivered
         task = nil
         isLoading = false
+    }
+
+    /// Resets the `FetchImage` instance by cancelling the request and removing
+    /// all of the state including the loaded image.
+    public func reset() {
+        cancel()
+        image = nil
+        error = nil
+        isLoading = false
+        progress = Progress(completed: 0, total: 0)
+        loadedImageQuality = nil
     }
 }
 
