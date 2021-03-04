@@ -87,7 +87,9 @@ Here is an example of using `FetchImage` in a custom SwiftUI view.
 
 ```swift
 public struct ImageView: View {
-    @ObservedObject var image: FetchImage
+    let url: URL
+
+    @StateObject var image = FetchImage()
 
     public var body: some View {
         ZStack {
@@ -95,11 +97,17 @@ public struct ImageView: View {
             image.view?
                 .resizable()
                 .aspectRatio(contentMode: .fill)
+                .clipped()
         }
 
         // Cancel and restart the request during scrolling
         // If the view is still on screen, use `cancel()` instead of `reset()`.
-        .onAppear(perform: image.fetch)
+        .onAppear {
+            // Ensure that synchronous cache lookup doesn't trigger animations
+            withoutAnimation {
+                image.load(url)
+            }
+        }
         .onDisappear(perform: image.reset)
 
         // (Optional) Animate image appearance
@@ -107,15 +115,15 @@ public struct ImageView: View {
     }
 }
 
-struct ImageView_Previews: PreviewProvider {
-    static var previews: some View {
-        let url = URL(string: "https://cloud.githubusercontent.com/assets/1567433/9781817/ecb16e82-57a0-11e5-9b43-6b4f52659997.jpg")!
-        return ImageView(image: FetchImage(url: url))
-            .frame(width: 80, height: 80)
-            .clipped()
-    }
+private func withoutAnimation(_ closure: () -> Void) {
+    var transaction = Transaction(animation: nil)
+    transaction.disablesAnimations = true
+    withTransaction(transaction, closure)
 }
 ```
+
+> For iOS 13, use `@ObservedObject`. WARNING: `@ObservedObject` does own the instance,
+> you need to maintain the strong references to the `FetchImage` instances somewhere else.
 
 `FetchImage` gives you full control over how to manage the download and how to display the image. For example, one thing that you could do is to replace `onAppear` and `onDisappear` hooks to lower the priority of the requests instead of cancelling them. This might be useful if you want to continue loading and caching the images even if the user leaves the screen, but you still want the images the are currently on screen to be downloaded first.
 
