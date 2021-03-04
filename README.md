@@ -89,7 +89,7 @@ Here is an example of using `FetchImage` in a custom SwiftUI view.
 public struct ImageView: View {
     let url: URL
 
-    @StateObject var image = FetchImage()
+    @StateObject private var image = FetchImage()
 
     public var body: some View {
         ZStack {
@@ -131,7 +131,7 @@ struct DetailsView: View {
     var body: some View {
         List(imageUrls, id: \.self) {
             ImageView(url: $0)
-                .frame(width: 200, height: 200)
+                .frame(height: 200)
         }
     }
 }
