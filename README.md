@@ -122,6 +122,21 @@ private func withoutAnimation(_ closure: () -> Void) {
 }
 ```
 
+Usage with a list:
+
+```swift
+struct DetailsView: View {
+    @State var refresh: Bool = false
+
+    var body: some View {
+        List(imageUrls, id: \.self) {
+            ImageView(url: $0)
+                .frame(width: 200, height: 200)
+        }
+    }
+}
+```
+
 > For iOS 13, use `@ObservedObject`. WARNING: `@ObservedObject` does own the instance,
 > you need to maintain the strong references to the `FetchImage` instances somewhere else.
 
