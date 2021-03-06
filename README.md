@@ -26,14 +26,6 @@ public final class FetchImage: ObservableObject, Identifiable {
     /// Returns `true` if the image is being loaded.
     @Published public private(set) var isLoading: Bool = false
 
-    public struct Progress {
-        /// The number of bytes that the task has received.
-        public internal(set) var completed: Int64 = 0
-
-        /// A best-guess upper bound on the number of bytes the client expects to send.
-        public internal(set) var total: Int64 = 0
-    }
-
     /// The progress of the image download.
     @Published public var progress = Progress()
 }
@@ -41,7 +33,9 @@ public final class FetchImage: ObservableObject, Identifiable {
 
 ## Usage
 
-An example of `FetchImage` in a custom SwiftUI view:
+`FetchImage` doesn't ship an image view because it's trivial to create one using SwiftUI and customize it precisely the way you want. 
+
+An example of `FetchImage` usage in a custom SwiftUI view:
 
 ```swift
 public struct ImageView: View {
@@ -51,15 +45,12 @@ public struct ImageView: View {
 
     public var body: some View {
         ZStack {
-            Rectangle().fill(Color.gray) // Placeholder
+            Rectangle().fill(Color.gray)
             image.view?
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .clipped()
         }
-
-        // Start the request when the view appears on screen and cancel when
-        // it disappears, work with `List` and lazy stacks.
         .onAppear { image.load(url) }
         .onDisappear(perform: image.reset)
     }
