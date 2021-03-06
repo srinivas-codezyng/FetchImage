@@ -94,8 +94,6 @@ struct DetailsView: View {
 Animations:
 
 ```swift
-
-```swift
 struct ImageView: View {
     let url: URL
 
