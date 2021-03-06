@@ -1,5 +1,12 @@
 # FetchImage 0.x
 
+## FetchImage 0.4.0
+
+*Mar 6, 2021*
+
+- Rework the APIs to support @StateObject. FetchImage now has an API design recommended in [WWDC 2020: Data Essentials in SwiftUI](https://developer.apple.com/videos/play/wwdc2020/10040/)
+- Remove low data mode support
+
 ## FetchImage 0.3.0
 
 *Dec 26, 2020*
