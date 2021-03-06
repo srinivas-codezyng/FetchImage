@@ -42,12 +42,12 @@ public final class FetchImage: ObservableObject, Identifiable {
 An example of `FetchImage` usage in a custom SwiftUI view:
 
 ```swift
-public struct ImageView: View {
+struct ImageView: View {
     let url: URL
 
     @StateObject private var image = FetchImage()
 
-    public var body: some View {
+    var body: some View {
         ZStack {
             Rectangle().fill(Color.gray)
             image.view?
@@ -88,6 +88,36 @@ struct DetailsView: View {
 }
 .onDisappear {
     self.image.priority = .low
+}
+```
+
+Animations:
+
+```swift
+
+```swift
+struct ImageView: View {
+    let url: URL
+
+    @StateObject private var image = FetchImage()
+
+    var body: some View {
+        // ... create image view 
+        .onAppear {
+            // Ensure that memory cache lookup is performed without animations
+            withoutAnimation {
+                image.load(url)
+            }
+        }
+        .onDisappear(perform: image.reset)
+        .animation(.default)
+    }
+}
+
+private func withoutAnimation(_ closure: () -> Void) {
+    var transaction = Transaction(animation: nil)
+    transaction.disablesAnimations = true
+    withTransaction(transaction, closure)
 }
 ```
 
