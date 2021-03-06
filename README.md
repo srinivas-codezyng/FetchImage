@@ -4,13 +4,11 @@
 
 # FetchImage
 
-`FetchImage` is a Swift package that makes it easy to download images using [`Nuke`](https://github.com/kean/Nuke) and display them in SwiftUI apps
-
-> **Note**. This is an API preview. It is not battle-tested yet, and might change in the future.
+`FetchImage` is a Swift package that makes it easy to download images using [`Nuke`](https://github.com/kean/Nuke) and display them in SwiftUI apps.
 
 ## Overview
 
-`FetchImage` is an observable object (`ObservableObject`) that allows you to manage the download of a single image and observe the results of the download. All of the changes to the download state are published using properties marked with `@Published` property wrapper.
+`FetchImage` is an observable object ([`ObservableObject`](https://developer.apple.com/documentation/combine/observableobject)) that allows you to manage the download of an image and observe the results of the download.
 
 ```swift
 public final class FetchImage: ObservableObject, Identifiable {
@@ -41,49 +39,9 @@ public final class FetchImage: ObservableObject, Identifiable {
 }
 ```
 
-You can initialize the download with a `URL`, or an `ImageRequest`, just as you would expect with `Nuke`. `FetchImage` supports everything that `Nuke` does. This includes changing request priorities, progressive image decoding, and more.
-
-```swift
-public final class FetchImage: ObservableObject, Identifiable {
-    /// Initializes the fetch request and immediately start loading.
-    public init(request: ImageRequest, pipeline: ImagePipeline = .shared)
-
-    /// Initializes the fetch request and immediately start loading.
-    public convenience init(url: URL, pipeline: ImagePipeline = .shared)
-}
-```
-
-When the `FetchImage` object is created, it automatically starts the request. You also have an option to `cancel` the request and restart it later using `fetch` method. This is something that you would typically need when displaying images in a `List`. You can also use `fetch` to restart failed downloads.
-
-Another little thing that `FetchImage` does for you is automatically cancelling the download when de-instantiated.
-
-```swift
-public final class FetchImage: ObservableObject, Identifiable {
-
-    /// Updates the priority of the task, even if the task is already running.
-    public var priority: ImageRequest.Priority
-
-    /// Starts loading an image unless the download is already completed successfully.
-    public func fetch()
-
-    /// Marks the request as being cancelled.
-    public func cancel()
-}
-```
-
-### Low Data Mode
-
-iOS 13 introduced a new [Low Data mode](https://support.apple.com/en-us/HT210596) and `FetchImage` offers a built-in support for it.
-
-```swift
-FetchImage(regularUrl: highQualityUrl, lowDataUrl: lowQualityUrl)
-```
-
-`FetchedImage.init(regularUrl:lowDataUrl:pipeline:)` is a convenience initializer that fetches the image with a regular URL with constrained network access disabled, and if the download fails because of the constrained network access, uses a low data URL instead. It also handles the scenarios like fetching a high quality image when unconstrained network access is restored.
-
 ## Usage
 
-Here is an example of using `FetchImage` in a custom SwiftUI view.
+An example of `FetchImage` in a custom SwiftUI view:
 
 ```swift
 public struct ImageView: View {
@@ -93,32 +51,18 @@ public struct ImageView: View {
 
     public var body: some View {
         ZStack {
-            Rectangle().fill(Color.gray)
+            Rectangle().fill(Color.gray) // Placeholder
             image.view?
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .clipped()
         }
 
-        // Cancel and restart the request during scrolling
-        // If the view is still on screen, use `cancel()` instead of `reset()`.
-        .onAppear {
-            // Ensure that synchronous cache lookup doesn't trigger animations
-            withoutAnimation {
-                image.load(url)
-            }
-        }
+        // Start the request when the view appears on screen and cancel when
+        // it disappears, work with `List` and lazy stacks.
+        .onAppear { image.load(url) }
         .onDisappear(perform: image.reset)
-
-        // (Optional) Animate image appearance
-        .animation(.default)
     }
-}
-
-private func withoutAnimation(_ closure: () -> Void) {
-    var transaction = Transaction(animation: nil)
-    transaction.disablesAnimations = true
-    withTransaction(transaction, closure)
 }
 ```
 
@@ -137,7 +81,7 @@ struct DetailsView: View {
 }
 ```
 
-> For iOS 13, use `@ObservedObject`. WARNING: `@ObservedObject` does own the instance,
+> For iOS 13, use `@ObservedObject`. WARNING: `@ObservedObject` does not own the instance,
 > you need to maintain the strong references to the `FetchImage` instances somewhere else.
 
 `FetchImage` gives you full control over how to manage the download and how to display the image. For example, one thing that you could do is to replace `onAppear` and `onDisappear` hooks to lower the priority of the requests instead of cancelling them. This might be useful if you want to continue loading and caching the images even if the user leaves the screen, but you still want the images the are currently on screen to be downloaded first.
@@ -161,4 +105,3 @@ struct DetailsView: View {
 # License
 
 FetchImage is available under the MIT license. See the LICENSE file for more info.
-
