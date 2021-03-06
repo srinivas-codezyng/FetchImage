@@ -5,14 +5,9 @@
 import SwiftUI
 import Nuke
 
-/// - WARNING: This is an API preview. It is not battle-tested yet and might signficantly change in the future.
 public final class FetchImage: ObservableObject, Identifiable {
     /// The original request.
     public private(set) var request: ImageRequest?
-
-    /// The request to be performed if the original request fails with
-    /// `networkUnavailableReason` `.constrained` (low data mode).
-    public private(set) var lowDataRequest: ImageRequest?
 
     /// Returns the fetched image.
     ///
@@ -46,11 +41,6 @@ public final class FetchImage: ObservableObject, Identifiable {
 
     public var pipeline: ImagePipeline = .shared
     private var task: ImageTask?
-    private var loadedImageQuality: ImageQuality?
-
-    private enum ImageQuality {
-        case regular, low
-    }
 
     deinit {
         cancel()
@@ -60,16 +50,6 @@ public final class FetchImage: ObservableObject, Identifiable {
 
     public func load(_ url: URL) {
         self.load(ImageRequest(url: url))
-    }
-
-    /// Loads image with a regular URL with constrained network access disabled,
-    /// and if the download fails because of the constrained network access,
-    /// uses a low data URL instead.
-    public func load(_ url: URL, lowDataUrl: URL) {
-        var request = URLRequest(url: url)
-        request.allowsConstrainedNetworkAccess = false
-
-        load(ImageRequest(urlRequest: request), lowDataRequest: ImageRequest(url: lowDataUrl))
     }
 
     /// Starts loading the image if not already loaded and the download is not
@@ -90,24 +70,18 @@ public final class FetchImage: ObservableObject, Identifiable {
         defer { previousTask?.cancel() }
 
         self.request = request
-        self.lowDataRequest = lowDataRequest
 
         // Try to display the regular image if it is available in memory cache
         if let container = pipeline.cachedImage(for: request) {
-            (image, loadedImageQuality) = (container.image, .regular)
+            image = container.image
             return // Nothing to do
         }
 
-        // Try to display the low data image and retry loading the regular image
-        if let container = lowDataRequest.flatMap(pipeline.cachedImage(for:)) {
-            (image, loadedImageQuality) = (container.image, .low)
-        }
-
         isLoading = true
-        load(request: request, quality: .regular)
+        _load(request: request)
     }
 
-    private func load(request: ImageRequest, quality: ImageQuality) {
+    private func _load(request: ImageRequest) {
         progress = Progress(completed: 0, total: 0)
 
         task = pipeline.loadImage(
@@ -122,7 +96,7 @@ public final class FetchImage: ObservableObject, Identifiable {
                 }
             },
             completion: { [weak self] in
-                self?.didFinishRequest(result: $0, quality: quality)
+                self?.didFinishRequest(result: $0)
             }
         )
 
@@ -131,26 +105,15 @@ public final class FetchImage: ObservableObject, Identifiable {
         }
     }
 
-    private func didFinishRequest(result: Result<ImageResponse, ImagePipeline.Error>, quality: ImageQuality) {
+    private func didFinishRequest(result: Result<ImageResponse, ImagePipeline.Error>) {
         task = nil
+        isLoading = false
 
         switch result {
         case let .success(response):
-            isLoading = false
-            (image, loadedImageQuality) = (response.image, quality)
+            self.image = response.image
         case let .failure(error):
-            // If the regular request fails because of the low data mode,
-            // use an alternative source.
-            if quality == .regular, error.isConstrainedNetwork, let request = self.lowDataRequest {
-                if loadedImageQuality == .low {
-                    isLoading = false // Low-quality image already loaded
-                } else {
-                    load(request: request, quality: .low)
-                }
-            } else {
-                self.error = error
-                isLoading = false
-            }
+            self.error = error
         }
     }
 
@@ -174,17 +137,7 @@ public final class FetchImage: ObservableObject, Identifiable {
         image = nil
         error = nil
         progress = Progress(completed: 0, total: 0)
-        loadedImageQuality = nil
-    }
-}
-
-private extension ImagePipeline.Error {
-    var isConstrainedNetwork: Bool {
-        if case let .dataLoadingFailed(error) = self,
-            (error as? URLError)?.networkUnavailableReason == .constrained {
-            return true
-        }
-        return false
+        request = nil
     }
 }
 
