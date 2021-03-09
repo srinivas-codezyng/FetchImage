@@ -65,8 +65,6 @@ Usage with a list:
 
 ```swift
 struct DetailsView: View {
-    @State var refresh: Bool = false
-
     var body: some View {
         List(imageUrls, id: \.self) {
             ImageView(url: $0)
