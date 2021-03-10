@@ -1,6 +1,6 @@
 <br/>
 
-![image](https://user-images.githubusercontent.com/1567433/110703387-b6c58000-81c1-11eb-806d-8f9d97dc5ecd.png)
+<img alr="fetchimage library logo" src="https://user-images.githubusercontent.com/1567433/110703387-b6c58000-81c1-11eb-806d-8f9d97dc5ecd.png">
 
 <p align="left">
 <img src="https://img.shields.io/badge/platforms-iOS%2C%20macOS%2C%20watchOS%2C%20tvOS-lightgrey.svg">
