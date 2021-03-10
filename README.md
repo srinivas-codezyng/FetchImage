@@ -1,6 +1,6 @@
 <br/>
 
-<p align="left"><img src="https://cloud.githubusercontent.com/assets/1567433/13918338/f8670eea-ef7f-11e5-814d-f15bdfd6b2c0.png" height="180"/>
+<img alt="fetch-image-logo" src="https://user-images.githubusercontent.com/1567433/110653511-50be0600-818b-11eb-87e6-53ba033cc930.png">
 
 # FetchImage
 
