@@ -8,7 +8,7 @@
 <img src="https://img.shields.io/badge/platforms-iOS%2C%20macOS%2C%20watchOS%2C%20tvOS-lightgrey.svg">
 </p>
 
-`FetchImage` is a Swift package that makes it easy to download images using [`Nuke`](https://github.com/kean/Nuke) and display them in SwiftUI apps.
+`FetchImage` makes it easy to download images using [Nuke](https://github.com/kean/Nuke) and display them in SwiftUI apps.
 
 ## Overview
 
