@@ -37,8 +37,6 @@ public final class FetchImage: ObservableObject, Identifiable {
 
 `FetchImage` doesn't ship an image view because it's trivial to create one using SwiftUI and customize it precisely the way you want. 
 
-An example of `FetchImage` usage in a custom SwiftUI view:
-
 ```swift
 struct ImageView: View {
     let url: URL
@@ -59,6 +57,8 @@ struct ImageView: View {
 }
 ```
 
+> For iOS 13, use `@ObservedObject`. Keep in mind that `@ObservedObject` does not own the instance, you need to maintain a strong reference to the `FetchImage` instance somewhere else.
+
 Usage with a list:
 
 ```swift
@@ -72,8 +72,7 @@ struct DetailsView: View {
 }
 ```
 
-> For iOS 13, use `@ObservedObject`. WARNING: `@ObservedObject` does not own the instance,
-> you need to maintain the strong references to the `FetchImage` instances somewhere else.
+> If the image view is outside of the list and you have a URL that changes, add `.id(url)` to your `ImageView`. This will ensure that `onAppear` is called when the URL changes.
 
 `FetchImage` gives you full control over how to manage the download and how to display the image. For example, one thing that you could do is to replace `onAppear` and `onDisappear` hooks to lower the priority of the requests instead of cancelling them. This might be useful if you want to continue loading and caching the images even if the user leaves the screen, but you still want the images the are currently on screen to be downloaded first.
 
