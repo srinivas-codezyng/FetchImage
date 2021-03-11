@@ -74,15 +74,15 @@ struct DetailsView: View {
 
 > If the image view is outside of the list and you have a URL that changes, add `.id(url)` to your `ImageView`. This will ensure that `onAppear` is called when the URL changes.
 
-`FetchImage` gives you full control over how to manage the download and how to display the image. For example, one thing that you could do is to replace `onAppear` and `onDisappear` hooks to lower the priority of the requests instead of cancelling them. This might be useful if you want to continue loading and caching the images even if the user leaves the screen, but you still want the images the are currently on screen to be downloaded first.
+`FetchImage` gives you full control over how to manage the download and display the image. For example, if you want the download to continue when the view leaves the screen, change the appearance callbacks:
 
 ```swift
 .onAppear {
-    self.image.priority = .normal
-    self.image.fetch() // Restart the request if previous download failed
+    image.priority = .normal
+    image.load(url)
 }
 .onDisappear {
-    self.image.priority = .low
+    image.priority = .low
 }
 ```
 
