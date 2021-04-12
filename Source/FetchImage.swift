@@ -4,6 +4,16 @@
 
 import SwiftUI
 import Nuke
+import Combine
+
+private enum ImageLoadState{
+    case YetToStart
+    case LoadingLowQuality
+    case CompletedLowQualityLoad
+    case LoadingHighQuality
+    case CompletedHighQualityLoad
+    case Failed
+}
 
 public final class FetchImage: ObservableObject, Identifiable {
     /// The original request.
@@ -22,6 +32,8 @@ public final class FetchImage: ObservableObject, Identifiable {
 
     /// Returns `true` if the image is being loaded.
     @Published public private(set) var isLoading: Bool = false
+   
+    @Published private var imageLoadState :ImageLoadState = ImageLoadState.YetToStart
 
     public struct Progress {
         /// The number of bytes that the task has received.
@@ -46,23 +58,34 @@ public final class FetchImage: ObservableObject, Identifiable {
         cancel()
     }
 
+    private var disposeBag:[AnyCancellable] = []
+    
     public init() {}
 
-    public func load(_ url: URL) {
-        self.load(ImageRequest(url: url))
+    public func load(_ url: URL,lowQualityURL:URL? = nil) {
+        guard imageLoadState == .YetToStart else {
+            return
+        }
+        if let lowQualityURL = lowQualityURL  {
+            self.$imageLoadState.sink { (_) in
+           } receiveValue: {[weak self] (state) in
+              if state == .CompletedLowQualityLoad {
+                    self?.disposeBag.removeAll()
+                    self?.load(ImageRequest(url: url), state: .LoadingHighQuality)
+               }
+           }.store(in: &disposeBag)
+            
+            self.load(ImageRequest(url: lowQualityURL), state: .LoadingLowQuality)
+           
+            return
+        }
+        
+        self.load(ImageRequest(url: url),state: .LoadingHighQuality)
     }
+    
 
-    /// Starts loading the image if not already loaded and the download is not
-    /// already in progress.
-    ///
-    /// - note: Low Data Mode. If the `lowDataRequest` is provided and the regular
-    /// request fails because of the constrained network access, the fetcher tries
-    /// to download the low-quality image. The fetcher always tries to get the high
-    /// quality image. If the first attempt fails, the next time you call `fetch`,
-    /// it is going to attempt to fetch the regular quality image again.
-    public func load(_ request: ImageRequest, lowDataRequest: ImageRequest? = nil) {
-        _reset()
-
+    private func load(_ request: ImageRequest, state : ImageLoadState) {
+        imageLoadState = state
         // Cancel previous task after starting a new one to make sure that if
         // there is an existing task already running we don't cancel it and start
         // a new once.
@@ -73,12 +96,22 @@ public final class FetchImage: ObservableObject, Identifiable {
 
         // Try to display the regular image if it is available in memory cache
         if let container = pipeline.cachedImage(for: request) {
+            self.isLoading = false
             image = container.image
+            updateLoadState()
             return // Nothing to do
         }
 
         isLoading = true
         _load(request: request)
+    }
+    
+    private func updateLoadState(){
+        if imageLoadState == .LoadingLowQuality {
+            imageLoadState = .CompletedLowQualityLoad
+        }else{
+            imageLoadState = .CompletedHighQualityLoad
+        }
     }
 
     private func _load(request: ImageRequest) {
@@ -112,8 +145,10 @@ public final class FetchImage: ObservableObject, Identifiable {
         switch result {
         case let .success(response):
             self.image = response.image
+            self.updateLoadState()
         case let .failure(error):
             self.error = error
+            self.imageLoadState = .Failed
         }
     }
 
