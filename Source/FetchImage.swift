@@ -61,26 +61,26 @@ public final class FetchImage: ObservableObject, Identifiable {
     private var disposeBag:[AnyCancellable] = []
     
     public init() {}
-
-    public func load(_ url: URL,lowQualityURL:URL? = nil) {
+    
+    public func load(_ url: URL) {
+        self.load(ImageRequest(url: url))
+    }
+    
+    public func load(_ url: URL,lowQualityURL:URL) {
         guard imageLoadState == .YetToStart else {
             return
         }
-        if let lowQualityURL = lowQualityURL  {
-            self.$imageLoadState.sink { (_) in
-           } receiveValue: {[weak self] (state) in
-              if state == .CompletedLowQualityLoad {
-                    self?.disposeBag.removeAll()
-                    self?.load(ImageRequest(url: url), state: .LoadingHighQuality)
-               }
-           }.store(in: &disposeBag)
-            
-            self.load(ImageRequest(url: lowQualityURL), state: .LoadingLowQuality)
-           
-            return
-        }
-        
-        self.load(ImageRequest(url: url),state: .LoadingHighQuality)
+        self.$imageLoadState.sink { (_) in
+
+        } receiveValue: {[weak self] (state) in
+          if state == .CompletedLowQualityLoad {
+                self?.disposeBag.removeAll()
+                self?.load(ImageRequest(url: url), state: .LoadingHighQuality)
+           }
+
+        }.store(in: &disposeBag)
+
+        self.load(ImageRequest(url: lowQualityURL), state: .LoadingLowQuality)
     }
     
 
@@ -99,6 +99,27 @@ public final class FetchImage: ObservableObject, Identifiable {
             self.isLoading = false
             image = container.image
             updateLoadState()
+            return // Nothing to do
+        }
+
+        isLoading = true
+        _load(request: request)
+    }
+    
+    public func load(_ request: ImageRequest, lowDataRequest: ImageRequest? = nil) {
+        _reset()
+
+        // Cancel previous task after starting a new one to make sure that if
+        // there is an existing task already running we don't cancel it and start
+        // a new once.
+        let previousTask = self.task
+        defer { previousTask?.cancel() }
+
+        self.request = request
+
+        // Try to display the regular image if it is available in memory cache
+        if let container = pipeline.cachedImage(for: request) {
+            image = container.image
             return // Nothing to do
         }
 
